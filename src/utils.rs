@@ -24,7 +24,8 @@ pub fn open_or_create_config() -> io::Result<File> {
     let config_file = config_path.join(CONFIG_NAME);
 
     match Path::new(&config_file).is_file() {
-        true => {
+        true => File::open(config_file),
+        false => {
             {
                 // Create in a new scope to close before opening
                 let mut file = File::create(&config_file)?;
@@ -32,11 +33,13 @@ pub fn open_or_create_config() -> io::Result<File> {
             }
             File::open(config_file)
         }
-        false => File::open(config_file),
     }
 }
 
 pub fn run_hyprctl(cmd: &str) -> io::Result<ExitStatus> {
     println!("> hyprctl keyword {}", cmd);
-    Command::new("hyprctl").args(["keyword"]).arg(cmd).status()
+    Command::new("hyprctl")
+        .args(["keyword", "monitor"])
+        .arg(cmd)
+        .status()
 }
