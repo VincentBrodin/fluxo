@@ -10,8 +10,22 @@ mod utils;
 
 fn main() {
     let config_file = utils::open_or_create_config().expect("Could not get config file");
-    let monitors: HashMap<String, monitor::Config> =
+    let configs: HashMap<String, monitor::Config> =
         serde_json::from_reader(config_file).expect("Config file is not valid");
+
+    let monitors = monitor::get_monitors().expect("Could not get monitors");
+    for (monitor, config) in configs.iter() {
+        let cmds = match monitors.iter().any(|m| &m.name == monitor) {
+            true => &config.on_added,
+            false => &config.on_removed,
+        };
+        for cmd in cmds {
+            match utils::run_hyprctl(cmd) {
+                Ok(exit_status) => println!("{}", exit_status.to_string()),
+                Err(err) => eprintln!("Failed: {}", err),
+            };
+        }
+    }
 
     let runtime_dir = env::var("XDG_RUNTIME_DIR").expect("XDG_RUNTIME_DIR is not set");
     let instance =
@@ -31,14 +45,14 @@ fn main() {
             }
         };
         let cmds = match monitor::parse_event(&line) {
-            monitor::Event::MonitorAdded(name) => match monitors.get(&name) {
+            monitor::Event::MonitorAdded(name) => match configs.get(&name) {
                 Some(config) => &config.on_added,
                 None => {
                     println!("No config for: {}", name);
                     continue;
                 }
             },
-            monitor::Event::MonitorRemoved(name) => match monitors.get(&name) {
+            monitor::Event::MonitorRemoved(name) => match configs.get(&name) {
                 Some(config) => &config.on_removed,
                 None => {
                     println!("No config for: {}", name);
