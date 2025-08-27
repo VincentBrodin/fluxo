@@ -9,30 +9,30 @@ mod monitor;
 mod utils;
 
 fn main() {
-    let config_file = utils::open_or_create_config().expect("Could not get config file");
-    let configs: HashMap<String, monitor::Config> =
-        serde_json::from_reader(config_file).expect("Config file is not valid");
+    let config_file = utils::open_or_create_config()
+        .unwrap_or_else(|err| panic!("Could create or open the config file: {}", err));
+    let configs: HashMap<String, monitor::Config> = serde_json::from_reader(config_file)
+        .unwrap_or_else(|err| panic!("Config file is not valid: {}", err));
 
-    let monitors = monitor::get_monitors().expect("Could not get monitors");
+    let monitors = monitor::get_monitors()
+        .unwrap_or_else(|err| panic!("Could not get active monitors: {}", err));
     for (monitor, config) in configs.iter() {
         let cmds = match monitors.iter().any(|m| &m.name == monitor) {
             true => &config.on_added,
             false => &config.on_removed,
         };
-        for cmd in cmds {
-            match utils::run_hyprctl(cmd) {
-                Ok(exit_status) => println!("{}", exit_status.to_string()),
-                Err(err) => eprintln!("Failed: {}", err),
-            };
-        }
+        utils::run_cmds(cmds);
     }
 
-    let runtime_dir = env::var("XDG_RUNTIME_DIR").expect("XDG_RUNTIME_DIR is not set");
-    let instance =
-        env::var("HYPRLAND_INSTANCE_SIGNATURE").expect("HYPRLAND_INSTANCE_SIGNATURE is not set");
-    let socket_path = format!("{}/hypr/{}/.socket2.sock", runtime_dir, instance);
+    let runtime_dir = env::var("XDG_RUNTIME_DIR")
+        .unwrap_or_else(|err| panic!("XDG_RUNTIME_DIR is not set: {}", err));
+    let instance = env::var("HYPRLAND_INSTANCE_SIGNATURE")
+        .unwrap_or_else(|err| panic!("HYPRLAND_INSTANCE_SIGNATURE is not set: {}", err));
 
-    let stream = UnixStream::connect(socket_path).expect("Could not connect to stream");
+    let socket_path = format!("{}/hypr/{}/.socket2.sock", runtime_dir, instance);
+    let stream = UnixStream::connect(socket_path)
+        .unwrap_or_else(|err| panic!("Could not connect to stream: {}", err));
+
     let reader = BufReader::new(stream);
 
     // This reads all inputs from hyprland
@@ -62,11 +62,6 @@ fn main() {
             monitor::Event::Unkown => continue,
         };
 
-        for cmd in cmds {
-            match utils::run_hyprctl(cmd) {
-                Ok(exit_status) => println!("{}", exit_status.to_string()),
-                Err(err) => eprintln!("Failed: {}", err),
-            };
-        }
+        utils::run_cmds(cmds);
     }
 }
