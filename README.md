@@ -46,7 +46,7 @@ Here’s an example (my personal setup):
 
 ### What it does
 
-* When `HDMI-A-1` gets plugged in, it runs the `on_added` command → disables `eDP-1`.
+* When `HDMI-A-1` gets plugged in, it runs the `on_added` command -> disables `eDP-1`.
 * On startup, `fluxo` checks all monitors listed in your config.
 
   * If a monitor is connected, it runs `on_added`.
@@ -54,7 +54,8 @@ Here’s an example (my personal setup):
 
 ## Syntax
 
-The commands use Hyprland’s built in monitor syntax. [Read more here](https://wiki.hypr.land/Configuring/Monitors/).
+The commands use Hyprland’s built in monitor syntax. 
+-> [Read more here](https://wiki.hypr.land/Configuring/Monitors/).
 
 
 ## Contributing
