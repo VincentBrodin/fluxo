@@ -14,15 +14,7 @@ fn main() {
     let configs: HashMap<String, monitor::Config> = serde_json::from_reader(config_file)
         .unwrap_or_else(|err| panic!("Config file is not valid: {}", err));
 
-    let monitors = monitor::get_monitors()
-        .unwrap_or_else(|err| panic!("Could not get active monitors: {}", err));
-    for (monitor, config) in configs.iter() {
-        let cmds = match monitors.iter().any(|m| &m.name == monitor) {
-            true => &config.on_added,
-            false => &config.on_removed,
-        };
-        utils::run_cmds(cmds);
-    }
+    set_state(&configs);
 
     let runtime_dir = env::var("XDG_RUNTIME_DIR")
         .unwrap_or_else(|err| panic!("XDG_RUNTIME_DIR is not set: {}", err));
@@ -59,9 +51,25 @@ fn main() {
                     continue;
                 }
             },
+            monitor::Event::ConfigReload => {
+                set_state(&configs);
+                continue;
+            }
             monitor::Event::Unkown => continue,
         };
 
+        utils::run_cmds(cmds);
+    }
+}
+
+fn set_state(configs: &HashMap<String, monitor::Config>) {
+    let monitors = monitor::get_monitors()
+        .unwrap_or_else(|err| panic!("Could not get active monitors: {}", err));
+    for (monitor, config) in configs.iter() {
+        let cmds = match monitors.iter().any(|m| &m.name == monitor) {
+            true => &config.on_added,
+            false => &config.on_removed,
+        };
         utils::run_cmds(cmds);
     }
 }

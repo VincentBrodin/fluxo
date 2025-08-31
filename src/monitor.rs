@@ -15,10 +15,12 @@ pub struct Monitor {
 
 const MONITOR_ADDED: &str = "monitoradded";
 const MONITOR_REMOVED: &str = "monitorremoved";
+const CONFIG_RELOAD: &str = "configreloaded";
 
 pub enum Event {
     MonitorAdded(String),
     MonitorRemoved(String),
+    ConfigReload,
     Unkown,
 }
 
@@ -40,11 +42,10 @@ pub fn parse_event(event: &str) -> Event {
         return Event::Unkown;
     }
 
-    if parts[0] == MONITOR_ADDED {
-        Event::MonitorAdded(parts[1].to_string())
-    } else if parts[0] == MONITOR_REMOVED {
-        Event::MonitorRemoved(parts[1].to_string())
-    } else {
-        Event::Unkown
+    match parts[0] {
+        MONITOR_ADDED => Event::MonitorAdded(parts[1].to_string()),
+        MONITOR_REMOVED => Event::MonitorRemoved(parts[1].to_string()),
+        CONFIG_RELOAD => Event::ConfigReload,
+        _ => Event::Unkown,
     }
 }
