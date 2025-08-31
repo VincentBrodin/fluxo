@@ -1,4 +1,3 @@
-
 # fluxo
 
 `fluxo` is a tiny tool that reacts to monitor changes in **Hyprland**.
@@ -24,6 +23,9 @@ Then add this to your Hyprland config:
 
 ```
 exec-once = PATH/TO/fluxo/target/release/fluxo
+
+// Or if you want to get logs
+exec-once = PATH/TO/fluxo/target/release/fluxo >> ~/config/fluxo/logs.txt
 ```
 
 ## Usage
